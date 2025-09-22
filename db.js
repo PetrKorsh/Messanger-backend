@@ -1,31 +1,37 @@
-const Pool = require("pg").Pool;
-const User = require("./model/User");
-const Freind = require("./model/Freinds");
-const Message = require("./model/Message");
-
-const pool = new Pool({
-  user: "postgres",
-  password: "123",
-  host: "localhost",
-  port: 5432,
-  database: "zombiedb",
-});
+const { Sequelize } = require("sequelize");
+require("dotenv").config();
+const sequelize = new Sequelize(
+  process.env.DB_NAME,
+  process.env.DB_USER,
+  process.env.DB_PASS,
+  {
+    host: process.env.DB_HOST,
+    dialect: "postgres",
+    port: process.env.DB_PORT,
+  }
+);
 
 const connectDB = async () => {
   try {
-    await pool.connect();
-    await pool.query(User);
-    await pool.query(Freind);
-    await pool.query(Message);
-    console.log("DB connect");
+    await sequelize.authenticate();
+    require("./model/User");
+    require("./model/Message");
+    require("./model/Freinds");
+
+    // синхронизация моделей с БД
+    await sequelize.sync({ alter: true });
+    console.log("Connection has been established successfully.");
   } catch (error) {
-    console.log("Connection error ): " + error);
-    //exit proccess
-    process.exit(1);
+    console.error("Unable to connect to the database:", error);
   }
 };
 
-module.exports = {
-  pool,
-  connectDB,
-};
+// const pool = new Pool({
+//   user: "postgres",
+//   password: "123",
+//   host: "localhost",
+//   port: 5432,
+//   database: "zombiedb",
+// });
+
+module.exports = { connectDB, sequelize };

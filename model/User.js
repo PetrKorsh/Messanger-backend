@@ -1,15 +1,58 @@
-const UserSchema = `CREATE TABLE IF NOT EXISTS
-  users (
-    user_id SERIAL PRIMARY KEY,
-    login VARCHAR(55) NOT NULL UNIQUE,
-    firstname VARCHAR(55) NOT NULL,
-    lastname VARCHAR(55) NOT NULL,
-    patronymic VARCHAR(55),
-    bio TEXT,
-    email VARCHAR(55) NOT NULL UNIQUE,
-    password_hash VARCHAR(55) NOT NULL,
-    profile_picture_url VARCHAR(255),
-    registration_date TIMESTAMP DEFAULT NOW ()
-  )`;
+const { DataTypes } = require("sequelize");
+const { sequelize } = require("../db");
 
-module.exports = User = UserSchema;
+const User = sequelize.define(
+  "User",
+  {
+    user_id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
+    },
+    login: {
+      type: DataTypes.STRING(55),
+      allowNull: false,
+      unique: true,
+    },
+    firstname: {
+      type: DataTypes.STRING(55),
+      allowNull: false,
+    },
+    lastname: {
+      type: DataTypes.STRING(55),
+      allowNull: false,
+    },
+    patronymic: {
+      type: DataTypes.STRING(55),
+      allowNull: true,
+    },
+    bio: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    email: {
+      type: DataTypes.STRING(55),
+      allowNull: false,
+      unique: true,
+    },
+    password_hash: {
+      type: DataTypes.STRING(55),
+      allowNull: false,
+    },
+    profile_picture_url: {
+      type: DataTypes.STRING(255),
+      allowNull: true,
+    },
+    registration_date: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW,
+    },
+  },
+  {
+    tableName: "users", // Название таблицы в базе данных
+    timestamps: false, // Не создавать автоматически поля createdAt и updatedAt
+  }
+);
+
+// Экспортируем модель
+module.exports = User;

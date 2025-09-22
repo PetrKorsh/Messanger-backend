@@ -40,16 +40,11 @@ class UserController {
       }
 
       console.error("Create user error:", error);
-      res.status(500).json({ error: "Ошибка сервера" });
+      return res.status(500).json({ error: "Ошибка сервера" });
     }
   }
   async getUsers(req, res) {
-    try {
-      const users = await pool.query(`Select * from users`);
-      res.json(users.rows);
-    } catch (error) {
-      res.status(500).json({ error: "Ошибка сервера" });
-    }
+    // Тут должен вызов к функции в который я буду описывать сому валидацию через express-validator
   }
   async getOneUser(req, res) {
     try {
