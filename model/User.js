@@ -27,7 +27,7 @@ const User = sequelize.define(
       allowNull: true,
     },
     bio: {
-      type: DataTypes.TEXT,
+      type: DataTypes.STRING(500),
       allowNull: true,
     },
     email: {
@@ -35,8 +35,8 @@ const User = sequelize.define(
       allowNull: false,
       unique: true,
     },
-    password_hash: {
-      type: DataTypes.STRING(55),
+    password: {
+      type: DataTypes.STRING(255),
       allowNull: false,
     },
     profile_picture_url: {

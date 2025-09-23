@@ -1,46 +1,49 @@
 const { pool } = require("../db");
+const User = require("../model/User");
+const bcrypt = require("bcrypt");
+const { generateToken } = require("../utils/token");
 
 class UserController {
   async createUser(req, res) {
     try {
-      const userData = req.body;
-      const existingUser = await pool.query(
-        `SELECT user_id FROM users 
-         WHERE login = $1 OR email = $2`,
-        [userData.login, userData.email]
-      );
+      const {
+        login,
+        firstname,
+        lastname,
+        patronymic,
+        bio,
+        email,
+        password,
+        profile_picture_url,
+      } = req.body;
 
-      if (existingUser.rows.length > 0) {
-        return res.status(400).json({
-          error: "Пользователь с таким Логином или Email уже существует",
-        });
-      }
+      const password_hash = await bcrypt.hash(password, 10);
 
-      const result = await pool.query(
-        `INSERT INTO users 
-         (login, firstname, lastname, patronymic, bio, email, password_hash, profile_picture_url) 
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
-         RETURNING user_id, login, email, registration_date`,
-        [
-          userData.login,
-          userData.firstname,
-          userData.lastname,
-          userData.patronymic || null,
-          userData.bio || null,
-          userData.email,
-          userData.password_hash,
-          userData.profile_picture_url || null,
-        ]
-      );
+      const newUser = await User.create({
+        login,
+        firstname,
+        lastname,
+        patronymic,
+        bio,
+        email,
+        password: password_hash,
+        profile_picture_url,
+      });
 
-      res.status(201).json(result.rows[0]);
+      const token = generateToken(newUser);
+
+      res.status(201).json({
+        success: true,
+        token,
+        user: {
+          id: newUser.user_id,
+          login: newUser.login,
+          email: newUser.email,
+        },
+      });
     } catch (error) {
-      if (error.code === "23505") {
-        return res.status(400).json({ error: "User already exists" });
-      }
-
-      console.error("Create user error:", error);
-      return res.status(500).json({ error: "Ошибка сервера" });
+      console.error(error);
+      res.status(500).json({ success: false, message: "Server error" });
     }
   }
   async getUsers(req, res) {
