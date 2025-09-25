@@ -3,6 +3,8 @@ const router = new Router();
 const userController = require("../controllers/user.controller");
 const userValidator = require("../validators/user.validator");
 const validate = require("../middleware/validate");
+const authValidator = require("../validators/auth.validator");
+const auth = require("../middleware/auth");
 
 router.post(
   "/user/registration",
@@ -10,6 +12,7 @@ router.post(
   validate,
   userController.createUser
 );
-router.get("/user", userController.getUsers);
+router.post("/user", authValidator, validate, userController.Authorization);
+router.get("/user", auth, userController.getProfile);
 
 module.exports = router;

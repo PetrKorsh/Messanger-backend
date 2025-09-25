@@ -59,8 +59,57 @@ class UserController {
       res.status(500).json({ success: false, message: "Server error" });
     }
   }
-  async getUsers(req, res) {
-    // Тут должен вызов к функции в который я буду описывать сому валидацию через express-validator
+  async Authorization(req, res) {
+    try {
+      const { loginEmail, password } = req.body;
+      const user = await User.findOne({
+        where: { [Op.or]: [{ login: loginEmail }, { email: loginEmail }] },
+      });
+
+      if (!user) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Пользователь не найден" });
+      }
+
+      const isMatch = bcrypt.compare(password, user.password);
+      if (!isMatch) {
+        res.status(400).json({
+          success: false,
+          message: "Неверный пароль",
+        });
+      }
+      const token = generateToken(user.toJSON());
+
+      res.json({
+        success: true,
+        token,
+        user: {
+          id: user.user_id,
+          login: user.login,
+          email: user.email,
+        },
+      });
+    } catch (error) {
+      console.error("Ошибка авторизации:", error);
+      res.status(500).json({ success: false, message: "Server error" });
+    }
+  }
+  async getProfile(req, res) {
+    try {
+      const user = await User.findByPk(req.user.id, {
+        attributes: ["user_id", "login", "email", "firstname", "lastname"],
+      });
+
+      if (!user) {
+        return res.status(404).json({ message: "Пользователь не найден" });
+      }
+
+      res.json({ success: true, user });
+    } catch (error) {
+      console.error("Ошибка профиля:", error);
+      res.status(500).json({ message: "Server error" });
+    }
   }
 }
 
