@@ -1,15 +1,22 @@
 const jwt = require("jsonwebtoken");
 
 const auth = (req, res, next) => {
-  const authHeader = req.headers.authorization;
+  let token;
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    token = authHeader.split(" ")[1];
+  }
+
+  if (!token && req.cookies.token) {
+    token = req.cookies.token;
+  }
+
+  if (!token) {
     return res
       .status(401)
       .json({ message: "Нет токена, авторизация отклонена" });
   }
-
-  const token = authHeader.split(" ")[1];
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);

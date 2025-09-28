@@ -63,7 +63,9 @@ class UserController {
     try {
       const { loginEmail, password } = req.body;
       const user = await User.findOne({
-        where: { [Op.or]: [{ login: loginEmail }, { email: loginEmail }] },
+        where: {
+          [Op.or]: [{ login: loginEmail }, { email: loginEmail }],
+        },
       });
 
       if (!user) {
@@ -72,27 +74,37 @@ class UserController {
           .json({ success: false, message: "Пользователь не найден" });
       }
 
-      const isMatch = bcrypt.compare(password, user.password);
+      const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) {
-        res.status(400).json({
+        return res.status(400).json({
           success: false,
           message: "Неверный пароль",
         });
       }
+
       const token = generateToken(user.toJSON());
 
+      res.cookie("token", token, {
+        httpOnly: true,
+        sameSite: "strict",
+        maxAge: 24 * 60 * 60 * 1000,
+      });
+
       res.json({
-        success: true,
-        token,
+        auth: true,
         user: {
           id: user.user_id,
-          login: user.login,
+          firstname: user.firstname,
+          lastname: user.lastname,
+          patronymic: user.patronymic,
+          bio: user.bio,
           email: user.email,
+          profile_picture_url: user.profile_picture_url,
         },
       });
     } catch (error) {
       console.error("Ошибка авторизации:", error);
-      res.status(500).json({ success: false, message: "Server error" });
+      res.status(500).json({ auth: false, message: "Server error" });
     }
   }
   async getProfile(req, res) {
@@ -105,7 +117,7 @@ class UserController {
         return res.status(404).json({ message: "Пользователь не найден" });
       }
 
-      res.json({ success: true, user });
+      res.json({ auth: true, user });
     } catch (error) {
       console.error("Ошибка профиля:", error);
       res.status(500).json({ message: "Server error" });
