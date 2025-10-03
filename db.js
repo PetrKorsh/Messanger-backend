@@ -17,6 +17,7 @@ const connectDB = async () => {
     require("./model/User");
     require("./model/Message");
     require("./model/Freinds");
+    require("./model/Chat");
 
     // синхронизация моделей с БД
     await sequelize.sync({ alter: true });
